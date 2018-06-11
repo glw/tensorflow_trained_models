@@ -1,0 +1,4 @@
+made from 
+
+
+python3 object_detection/export_inference_graph.py --input_type image_tensor --pipeline_config_path=/home/obj_det/all_images/train/ssdlite_mobilenet_v2_coco.config --trained_checkpoint_prefix=/home/obj_det/all_images/train/model.ckpt-94952 --output_directory=/home/obj_det/all_images/inference_graph_v1
