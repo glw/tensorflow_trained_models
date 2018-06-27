@@ -71,8 +71,8 @@ def load_image_into_numpy_array(image):
 
 
 # Detection
-PATH_TO_TEST_IMAGES_DIR = '/mydata'
-TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'test_image.jpg' )]
+PATH_TO_TEST_IMAGES_DIR = '/home/pi/Public/'
+TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'counter_image.jpg' )]
 # Size, in inches, of the output images.
 IMAGE_SIZE = (12, 8)
 
