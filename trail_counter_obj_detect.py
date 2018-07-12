@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import numpy as np
 import os
 #import six.moves.urllib as urllib
@@ -8,6 +10,11 @@ import tensorflow as tf
 import requests
 import datetime
 import yaml
+
+# append tensorflow paths to libraries
+sys.path.append('/home/pi/Public/models/research')
+sys.path.append('/home/pi/Public/models/research/object_detection')
+sys.path.append('/home/pi/Public/models/research/slim')
 
 #from collections import defaultdict
 #from io import StringIO
@@ -29,7 +36,7 @@ if tf.__version__ < '1.4.0':
   raise ImportError('Please upgrade your tensorflow installation to v1.4.* or later!')
 
 # Env setup
-config = yaml.safe_load(open("config.yaml"))
+config = yaml.safe_load(open("/home/pi/Public/tensorflow_trained_models/config.yaml"))
 CHANNELID = config['thingspeak']['CHANNELID']
 KEY = config['thingspeak']['KEY']
 
@@ -40,10 +47,10 @@ KEY = config['thingspeak']['KEY']
 MODEL_NAME = 'inference_graph_v1'
 
 # Path to frozen detection graph. This is the actual model that is used for the object detection.
-PATH_TO_CKPT = 'tf_object_detection_models/' + MODEL_NAME + '/frozen_inference_graph.pb'
+PATH_TO_CKPT = '/home/pi/Public/tensorflow_trained_models/tf_object_detection_models/' + MODEL_NAME + '/frozen_inference_graph.pb'
 
 # List of the strings that is used to add correct label for each box.
-PATH_TO_LABELS = 'pbh_label_map.pbtxt'
+PATH_TO_LABELS = '/home/pi/Public/tensorflow_trained_models/pbh_label_map.pbtxt'
 
 NUM_CLASSES = 3
 
@@ -71,6 +78,8 @@ def load_image_into_numpy_array(image):
 
 
 # Detection
+# PATH_TO_TEST_IMAGES_DIR = '/home/pi/Public/tensorflow_trained_models/'
+# TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'test_image.jpg' )]
 PATH_TO_TEST_IMAGES_DIR = '/home/pi/Public/'
 TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'counter_image.jpg' )]
 # Size, in inches, of the output images.
@@ -142,17 +151,13 @@ with detection_graph.as_default():
           feed_dict={image_tensor: image_np_expanded})
 
 detec = [category_index.get(value) for index,value in enumerate(classes[0]) if scores[0,index] > 0.90]
-#print detec
+# print detec
 
 bicycle = 0
 person = 0
 horse = 0
 
 for d in detec:
-    main_url = 'https://api.thingspeak.com/update?api_key=' + KEY
-    channel_id = CHANNELID
-    date = str(datetime.datetime.now())
-
     if d['name'] == 'bicycle':
         bicycle += 1
     if d['name'] == 'person':
@@ -160,10 +165,23 @@ for d in detec:
     if d['name'] == 'horse':
         horse += 1
 
+
+main_url = 'https://api.thingspeak.com/update?api_key=' + KEY
+channel_id = CHANNELID
+date = str(datetime.datetime.now())
 payload = dict(field1=date, field3=bicycle, field4=person, field5=horse)
-r = requests.post(main_url, params=payload)
-#print r.url
-#print 'bicycle =', (bicycle)
-#print 'person =', (person)
-#print 'horse =', (horse)
-#print 'payload sent'
+
+for attempt in range (10):
+    try:
+        r = requests.post(main_url, params=payload)
+        # print r.url
+        # print 'payload sent'
+    except requests.exceptions.ConnectionError:
+        # print 'Connection Error'
+        pass
+    else:
+        break
+
+# print 'bicycle =', (bicycle)
+# print 'person =', (person)
+# print 'horse =', (horse)
